@@ -9,6 +9,7 @@ import numpy as np
 class DataPreprocessor:
     def __init__(self, data):
         self.data = pd.read_csv(data)
+        self.preprocessedData()
     
     def display_data(self):
         return self.head()
@@ -22,22 +23,19 @@ class DataPreprocessor:
     def missing_values(self):
         return self.data.isnull().sum()
     
-    def preprocess_missing_values(self):
+    def preprocessedData(self):
         self.data["Certificate"] = self.data["Certificate"].fillna(self.data["Certificate"].mode()[0])
-        self.data["Meta_Score"] = self.data["Meta_Score"].fillna(self.data["Meta_Score"].mean())
-        self.data["Gross"] = self.data["Gross"].str.replace(",", "")
-        self.data["Gross"] = self.data["Gross"].astype("float32").replace(np.nan, 0).astype("int32")
+        self.data["Meta_score"] = self.data["Meta_score"].fillna(self.data["Meta_score"].mean())
+        self.data["Gross"] = self.data["Gross"].astype(str).str.replace(",", "").astype("float32").replace(np.nan, 0).astype("int32")
+        self.data['text'] = self.data[["Overview", "Director", "Star1", "Star2", "Star3", "Star4", "Series_Title"]].apply(lambda x: ' '.join(map(str, x)), axis=1)
+        self.data = self.data.drop(columns=["Poster_Link", "Released_Year", "Certificate", "Director", "Star1", "Star2", "Star3", "Star4", "Meta_score","No_of_Votes","Gross"], axis=1)
+
+    def text_column(self):
+        return self.data['text']
 
     def data_correlation(self):
         numeric_columns = self.data.select_dtypes(["float32", "int32"])
         return numeric_columns
-    
-    def concatenate_text_columns(self):
-        self.data['text'] = self.data[["Overview", "Director", "Star1", "Star2", "Star3", "Star4", "Series_Title"]].apply(lambda x: ' '.join(map(str, x)), axis=1)
-        return self.data["text"]
-
-    def drop_columns(self):
-        self.data = self.data.drop(columns=["Poster_Link", "Series_Title", "Overview", "Director", "Star1", "Star2", "Star3", "Star4"], axis=1).head()
 
     def output(self):
-        return self.data[["Series_Title", "Overview", "IMDB_Rating"]]
+        return self.data
